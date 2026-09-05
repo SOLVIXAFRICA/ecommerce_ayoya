@@ -4,10 +4,9 @@
 
 @layer base {
   body {
-    @apply bg-ayoya-cream text-ayoya-brown antialiased;
-    font-family: 'Inter', sans-serif;
+    @apply bg-surface text-on-surface antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
   }
@@ -15,18 +14,15 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-lg bg-white/20 border border-white/30;
+    @apply backdrop-blur-lg bg-white/5 border border-white/10;
   }
-
   .glass-dark {
-    @apply backdrop-blur-lg bg-ayoya-brown/10 border border-ayoya-gold/20;
+    @apply backdrop-blur-lg bg-surface-container border border-primary/20;
   }
-
   .btn-primary {
-    @apply bg-ayoya-gold hover:bg-ayoya-dark-gold text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl;
+    @apply bg-primary hover:bg-primary-fixed text-on-primary font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl;
   }
-
   .btn-secondary {
-    @apply glass hover:bg-white/30 text-ayoya-brown font-semibold px-8 py-3 rounded-lg transition-all duration-300;
+    @apply bg-surface-container-high hover:bg-surface-bright text-on-surface font-semibold px-8 py-3 rounded-lg transition-all duration-300 border border-primary/20;
   }
 }

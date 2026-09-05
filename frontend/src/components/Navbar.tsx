@@ -1,84 +1,79 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import SocialIcons from './SocialIcons'
+import { Link, useLocation } from 'react-router-dom'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const location = useLocation()
+  const isHome = location.pathname === '/'
+
+  const navLinks = [
+    { label: `L\u2019Esprit`, href: isHome ? '#manifeste' : '/#manifeste' },
+    { label: `D\u00E9gustation`, href: isHome ? '#degustation' : '/#degustation' },
+    { label: `Racine`, href: isHome ? '#racine' : '/#racine' },
+    { label: `Bouteille`, href: isHome ? '#commander' : '/#commander' },
+    { label: `Commander`, href: '/cart' },
+  ]
 
   return (
-    <nav className="fixed top-0 w-full z-50 glass shadow-lg">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-ayoya-gold to-ayoya-dark-gold flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-ayoya-gold">AYOYA</h1>
-              <p className="text-xs text-ayoya-brown/70">Noblesse Africaine</p>
-            </div>
+    <header className="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-primary/10 shadow-[0_1px_8px_rgba(0,0,0,0.12)]">
+      <div className="h-20 max-w-[78rem] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
+        <Link to="/" className="flex flex-col group shrink-0">
+          <span className="font-headline-sm text-headline-sm tracking-[0.12em] text-primary group-hover:text-primary-fixed transition-colors duration-300">AYOYA</span>
+          <span className="font-label-caps text-label-caps text-on-surface-variant uppercase -mt-1 tracking-[0.18em]">Noblesse Africaine</span>
+        </Link>
+
+        <nav className="hidden lg:flex items-center gap-8">
+          {navLinks.map((l) => (
+            l.href.startsWith('/cart') ? (
+              <Link key={l.label} to={l.href} className="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors duration-200">
+                {l.label}
+              </Link>
+            ) : (
+              <a key={l.label} href={l.href} className="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors duration-200">
+                {l.label}
+              </a>
+            )
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <Link
+            to="/cart"
+            className="hidden sm:inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-fixed text-on-primary font-label-caps text-label-caps uppercase rounded-lg shadow-lg shadow-primary/20 transition-all duration-300"
+          >
+            Commander
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </Link>
-
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-ayoya-brown hover:text-ayoya-gold transition-colors font-medium">
-              Accueil
-            </Link>
-            <Link to="/product" className="text-ayoya-brown hover:text-ayoya-gold transition-colors font-medium">
-              Produit
-            </Link>
-            <Link to="/cart" className="btn-primary">
-              Commander
-            </Link>
-          </div>
-
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 text-ayoya-brown"
+            className="lg:hidden p-2 text-on-surface"
+            aria-label="Menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <span className="material-symbols-outlined">{menuOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
-
-        {menuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-ayoya-gold/20 pt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="space-y-3">
-              <Link
-                to="/"
-                className="block text-ayoya-brown hover:text-ayoya-gold transition-colors font-medium py-2"
-                onClick={() => setMenuOpen(false)}
-              >
-                Accueil
-              </Link>
-              <Link
-                to="/product"
-                className="block text-ayoya-brown hover:text-ayoya-gold transition-colors font-medium py-2"
-                onClick={() => setMenuOpen(false)}
-              >
-                Produit
-              </Link>
-              <Link
-                to="/cart"
-                className="btn-primary block text-center py-2"
-                onClick={() => setMenuOpen(false)}
-              >
-                Commander
-              </Link>
-              <Link
-                to="/cgu"
-                className="block text-ayoya-brown/70 hover:text-ayoya-gold transition-colors text-sm py-2"
-                onClick={() => setMenuOpen(false)}
-              >
-                Conditions Générales
-              </Link>
-            </div>
-            <div className="mt-4 pt-4 border-t border-ayoya-gold/20">
-              <SocialIcons className="flex gap-4" iconSize="w-5 h-5" />
-            </div>
-          </div>
-        )}
       </div>
-    </nav>
+
+      {menuOpen && (
+        <div className="lg:hidden border-t border-primary/10 bg-surface px-4 py-4 animate-in fade-in slide-in-from-top-2">
+          <div className="flex flex-col gap-1">
+            {navLinks.map((l) => (
+              l.href.startsWith('/cart') ? (
+                <Link key={l.label} to={l.href} onClick={() => setMenuOpen(false)} className="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary py-2">
+                  {l.label}
+                </Link>
+              ) : (
+                <a key={l.label} href={l.href} onClick={() => setMenuOpen(false)} className="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary py-2">
+                  {l.label}
+                </a>
+              )
+            ))}
+            <Link to="/cart" onClick={() => setMenuOpen(false)} className="mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-on-primary font-label-caps text-label-caps uppercase rounded-lg">
+              Commander — 5 000 FCFA
+            </Link>
+          </div>
+        </div>
+      )}
+    </header>
   )
 }

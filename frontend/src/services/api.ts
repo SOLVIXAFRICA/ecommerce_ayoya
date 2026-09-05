@@ -45,7 +45,24 @@ export interface EmailConfig {
 }
 
 export const orderAPI = {
-  create: (data: OrderData) => api.post('/orders', data),
+  create: (data: OrderData & { notes?: string; order_type?: string }) => {
+    const payload: Record<string, unknown> = {
+      customer_name: data.customerName,
+      customerName: data.customerName,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      quantity: data.quantity,
+      paymentMethod: data.paymentMethod,
+      deliveryMethod: data.deliveryMethod,
+    }
+    if (data.notes) {
+      payload.notes = data.notes
+      payload.customer_name = `${data.customerName} — Note: ${data.notes}`
+    }
+    if ((data as unknown as Record<string, unknown>).order_type) payload.order_type = (data as unknown as Record<string, unknown>).order_type
+    return api.post('/orders', payload)
+  },
   list: () => api.get('/orders'),
   getById: (id: string) => api.get(`/orders/${id}`),
 }
