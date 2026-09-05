@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="128" fill="#151312"/>
+  <circle cx="256" cy="256" r="190" fill="#f2ca50"/>
+  <text x="256" y="335" font-family="Playfair Display, serif" font-size="280" font-weight="700" text-anchor="middle" fill="#151312">A</text>
+  <text x="256" y="395" font-family="Plus Jakarta Sans, sans-serif" font-size="24" font-weight="600" letter-spacing="8" text-anchor="middle" fill="#151312">AYOYA</text>
+</svg>
