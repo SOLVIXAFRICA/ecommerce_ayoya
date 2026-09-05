@@ -7,10 +7,10 @@ from pathlib import Path
 import random
 import string
 
-from app.models import Order, AdminLogin, EmailConfig
+from app.models import Order, AdminLogin, EmailConfig, Product
 from app.auth import create_access_token, verify_token
 from app.email_service import send_order_email
-from app.routes import config, media, zones, logistics
+from app.routes import config, media, zones, logistics, products, download
 
 app = FastAPI(title="AYOYA E-Commerce API", version="1.0.0")
 
@@ -27,6 +27,8 @@ app.include_router(config.router)
 app.include_router(media.router)
 app.include_router(zones.router)
 app.include_router(logistics.router)
+app.include_router(products.router)
+app.include_router(download.router)
 
 # Static files
 from fastapi.staticfiles import StaticFiles
@@ -42,6 +44,32 @@ CONFIG_DIR.mkdir(exist_ok=True)
 
 PRICE_PER_BOTTLE = 5000
 DELIVERY_FEE = 1000
+DELIVERY_FEE_DASSI = 2000
+
+PRODUCTS_FILE = Path(__file__).parent.parent / "products.json"
+if not PRODUCTS_FILE.exists():
+    _alt = Path("/app/products.json")
+    if _alt.exists():
+        PRODUCTS_FILE = _alt
+
+
+def _load_products_list():
+    if not PRODUCTS_FILE.exists():
+        return []
+    with open(PRODUCTS_FILE) as f:
+        return json.load(f)
+
+
+def _save_products_list(products):
+    with open(PRODUCTS_FILE, "w") as f:
+        json.dump(products, f, indent=2, ensure_ascii=False)
+
+
+def _find_product(product_id: str):
+    for p in _load_products_list():
+        if p.get("id") == product_id:
+            return p
+    return None
 
 
 def generate_order_number():
@@ -64,19 +92,53 @@ async def create_order(order: Order):
     order.created_at = datetime.now().isoformat()
     order.status = "pending"
 
-    # Calculate total based on order type
-    if order.order_type == 'carton':
+    # Defaults pour compatibilite AYOYA existant
+    if not order.product_id:
+        order.product_id = "ayoya"
+    if not order.site:
+        order.site = "ayoya"
+
+    # Resolution produit + calcul total + gestion stock
+    products = _load_products_list()
+    product = next((p for p in products if p.get("id") == order.product_id), None)
+
+    if product is None:
+        # Fallback ayoya si product_id inconnu
+        product = next((p for p in products if p.get("id") == "ayoya"), None)
+        if product is None:
+            # Dernier recours: prix legacy
+            product = {"id": "ayoya", "price": PRICE_PER_BOTTLE, "stock": 9999}
+
+    # Stock insuffisant
+    current_stock = product.get("stock", 9999)
+    if current_stock < order.quantity:
+        raise HTTPException(status_code=400, detail=f"Stock insuffisant pour {product.get('id')}: {current_stock} disponible, {order.quantity} demande")
+
+    # Calcul total: product.price * quantity + deliveryFee (1000 ayoya, 2000 dassi)
+    if order.order_type == 'carton' and order.product_id == "ayoya":
         subtotal = order.quantity * 25000
     else:
-        subtotal = order.quantity * PRICE_PER_BOTTLE
+        subtotal = order.quantity * int(product.get("price", PRICE_PER_BOTTLE))
 
-    delivery = DELIVERY_FEE if order.deliveryMethod == 'delivery' else 0
+    if order.deliveryMethod == 'delivery':
+        delivery = DELIVERY_FEE_DASSI if order.site == "dassi" else DELIVERY_FEE
+    else:
+        delivery = 0
+
     order.total = subtotal + delivery
     order.totalAmount = order.total
 
+    # Decrementer stock et sauvegarder
+    for p in products:
+        if p.get("id") == product.get("id"):
+            p["stock"] = int(p.get("stock", 0)) - order.quantity
+            break
+    _save_products_list(products)
+    print(f"[ORDER] site={order.site} product_id={order.product_id} qty={order.quantity} stock_restant={product.get('stock', 0) - order.quantity if 'stock' in product else 'n/a'} total={order.total}")
+
     order_file = ORDERS_DIR / f"{order.id}.json"
     with open(order_file, "w") as f:
-        json.dump(order.model_dump(), f, indent=2)
+        json.dump(order.model_dump(), f, indent=2, ensure_ascii=False)
 
     try:
         await send_order_email(order)
