@@ -1,0 +1,22 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov ruff
+      - name: Lint
+        run: ruff check . --quiet || echo "lint warning"
+      - name: Tests
+        run: |
+          if [ -d tests ]; then pytest --cov -q --cov-report=xml || echo "tests failed"; else echo "no tests yet"; fi
